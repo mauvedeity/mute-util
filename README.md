@@ -14,7 +14,7 @@ run until I'm back.
 The main idea is to take advantage of lazy evaluation in the shell. Thus we can
 have one command line that looks like this:
 ```
-mute || command
+% mute || command
 ```
 This expression evaluates to the first result `OR` the second one. If the first
 is true, the shell doesn't bother to run the second command, because the result
@@ -25,7 +25,7 @@ that command. This is the lazy evaluation.
 This works for `AND` as well - so you can use the command to run things *only*
 during the muted date by using the `AND` operator instead:
 ```
-mute && command
+% mute && command
 ```
 This will run the command only when mute returns `true`, again because of lazy
 evaluation. This means we don't need an 'inverse' option.
@@ -45,7 +45,7 @@ it returns `false`, so that the shell will run the second command.
 Returns either true or false.
 
 ```
-%mute YYYYMMDD
+% mute YYYYMMDD
 ```
 Sets the 'mute-until' date.
 
