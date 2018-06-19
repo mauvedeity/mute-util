@@ -12,6 +12,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
+#include <pwd.h>
+#include <sys/types.h>
+
 
 /* helper functions */
 int getdatenow(char *destbuf, size_t destbufsz)
@@ -42,6 +46,35 @@ int getdatenow(char *destbuf, size_t destbufsz)
         }
 }
 
+int getparameterfile(char *p_buf)
+{
+        int rv = 0;
+        char *homedir = getenv("HOME");
+
+        if(homedir != NULL) { //environment method
+                if(!p_buf) {
+                        rv = strlen(homedir);
+                } else {
+                        rv = EXIT_SUCCESS;
+                        strcpy(p_buf, homedir);
+                }
+        } else { //fallback PW method
+                uid_t useruid = getuid();
+                struct passwd *pw = getpwuid(uid);
+                if(pw == NULL) {
+                        fprintf(stderr, "Couldn't get home directory from userid\n");
+                        exit(EXIT_FAILURE);
+                }
+                if(!p_buf) {
+                        rv = strlen(pw->pw_dir);
+                } else {
+                        rv = EXIT_SUCCESS;
+                        strcpy(p_bug, pw->pw_dir);
+                }
+        }
+        return(rv);
+}
+
 /* read out of file system file */
 /* beware horribly non-portable specification of file name */
 int getmutedatefromfile(char *destbuf, size_t destbfsz)
@@ -68,11 +101,14 @@ int getmutedatefromfile(char *destbuf, size_t destbfsz)
 /* main */
 int main(int argc, char *argv[])
 {
-        char datenow[20], datemute[20];
+        char datenow[20], datemute[20], homedir[512];
         printf("mute.c\n");
         getdatenow(datenow, sizeof(datenow));
         printf("Date now: ]%s[\n", datenow);
         getmutedatefromfile(datemute, sizeof(datemute));
         printf("Mute Date: ]%s[\n", datemute);
+        printf("Homedir buffer size: %d\n", getparameterfile(NULL));
+        (void)getparameterfile(homedir);
+        printf("Homedir value: %s\n", homedir);
         return(0);
 }
