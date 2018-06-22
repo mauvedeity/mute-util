@@ -46,47 +46,64 @@ int getdatenow(char *destbuf, size_t destbufsz)
         }
 }
 
-int getparameterfile(char *p_buf)
+int getparameterfilename(char *p_buf, const char *fname)
 {
         int rv = 0;
         char *homedir = getenv("HOME");
+        int fnamlen = strlen(fname) + 1; // allow for extra path separator
 
         if(homedir != NULL) { //environment method
                 if(!p_buf) {
-                        rv = strlen(homedir);
+                        rv = strlen(homedir) + fnamlen;
                 } else {
                         rv = EXIT_SUCCESS;
                         strcpy(p_buf, homedir);
+                        strcat(p_buf, "/");
+                        strcat(p_buf, fname);
                 }
         } else { //fallback PW method
                 uid_t useruid = getuid();
-                struct passwd *pw = getpwuid(uid);
+                struct passwd *pw = getpwuid(useruid);
                 if(pw == NULL) {
                         fprintf(stderr, "Couldn't get home directory from userid\n");
                         exit(EXIT_FAILURE);
                 }
                 if(!p_buf) {
-                        rv = strlen(pw->pw_dir);
+                        rv = strlen((pw->pw_dir) + fnamlen);
                 } else {
                         rv = EXIT_SUCCESS;
-                        strcpy(p_bug, pw->pw_dir);
+                        strcpy(p_buf, pw->pw_dir);
+                        strcat(p_buf, "/");
+                        strcat(p_buf, fname);
                 }
         }
         return(rv);
 }
 
 /* read out of file system file */
-/* beware horribly non-portable specification of file name */
+/* beware rather non-portable specification of file name */
 int getmutedatefromfile(char *destbuf, size_t destbfsz)
 {
         FILE *fmutefile;
         char *fline = NULL;
-        const char mfile[] = "/Users/mauvedeity/.muterc";
+        const char *mfile = ".muterc", actualfname[512];
         size_t linelen = 0;
+        int rv = EXIT_FAILURE;
 
-        fmutefile = fopen(mfile, "r");
+        if(getparameterfilename(NULL, mfile) > 512) {
+                fprintf(stderr, "It's likely that the parameter file size is insane!");
+                exit(EXIT_FAILURE);
+        }
+
+        rv = getparameterfilename((char *)actualfname, mfile);
+        if(rv == EXIT_FAILURE) {
+                fprintf(stderr, "Failed getting parameter file name for %s\n", mfile);
+                exit(EXIT_FAILURE);
+        }
+
+        fmutefile = fopen(actualfname, "r");
         if (NULL == fmutefile) {
-                fprintf(stderr, "Couldn't open %s for reading\n", mfile);
+                fprintf(stderr, "Couldn't open %s for reading\n", actualfname);
                 exit(EXIT_FAILURE);
         }
         linelen = getline(&fline, &linelen, fmutefile);
@@ -107,8 +124,5 @@ int main(int argc, char *argv[])
         printf("Date now: ]%s[\n", datenow);
         getmutedatefromfile(datemute, sizeof(datemute));
         printf("Mute Date: ]%s[\n", datemute);
-        printf("Homedir buffer size: %d\n", getparameterfile(NULL));
-        (void)getparameterfile(homedir);
-        printf("Homedir value: %s\n", homedir);
         return(0);
 }
