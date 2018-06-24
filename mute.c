@@ -119,10 +119,23 @@ int getmutedatefromfile(char *destbuf, size_t destbfsz)
 int main(int argc, char *argv[])
 {
         char datenow[20], datemute[20], homedir[512];
-        printf("mute.c\n");
+        int rv = 0, cmpv = 0;
         getdatenow(datenow, sizeof(datenow));
-        printf("Date now: ]%s[\n", datenow);
+        // printf("Date now: ]%s[\n", datenow);
         getmutedatefromfile(datemute, sizeof(datemute));
-        printf("Mute Date: ]%s[\n", datemute);
-        return(0);
+        // printf("Mute Date: ]%s[\n", datemute);
+
+        cmpv = strncmp(datemute, datenow, 8);
+
+        switch(cmpv) {
+                case -1:rv = EXIT_FAILURE; // muted - mute date greater than or equal to today
+                break;
+                case 0: 
+                case 1: rv = EXIT_SUCCESS; // not muted - mute date less than today
+                break;
+        }
+
+        // printf("Result is %d\n", cmpv);
+
+        return(rv);
 }
