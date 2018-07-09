@@ -16,6 +16,9 @@
 #include <pwd.h>
 #include <sys/types.h>
 
+/* defines */
+/* this seems to be about right on OS X, Pi reckons bigger */
+#define MAX_CMD_SIZE 262144
 
 /* helper functions */
 int getdatenow(char *destbuf, size_t destbufsz)
@@ -115,27 +118,52 @@ int getmutedatefromfile(char *destbuf, size_t destbfsz)
         return(0);
 }
 
+int buildandruncmd(int argc, char *argv[])
+{
+        int argptr = 0, curcmdlen = 0, slen = 0, rv = 0;
+        char newclistring[MAX_CMD_SIZE];
+
+        // build command line - need some way to make the length not overflow and
+        // cause me a core dump.
+        newclistring[0] = '\0';
+        for (argptr = 1; argptr < argc; argptr++) {
+                slen = strlen(argv[argptr]);
+
+                if((curcmdlen + slen) > MAX_CMD_SIZE) {
+                        fprintf(stderr, "Command line too long!\n");
+                        exit(1);
+                }
+                strcat(newclistring, argv[argptr]);
+                strncat(newclistring, " ", 1);
+                curcmdlen += slen;
+        }
+        printf("About to exec ]%s[\n", newclistring);
+        rv = system(newclistring);
+        return(rv);
+}
+
 /* main */
 int main(int argc, char *argv[])
 {
         char datenow[20], datemute[20], homedir[512];
         int rv = 0, cmpv = 0;
+
         getdatenow(datenow, sizeof(datenow));
         // printf("Date now: ]%s[\n", datenow);
         getmutedatefromfile(datemute, sizeof(datemute));
         // printf("Mute Date: ]%s[\n", datemute);
 
-        cmpv = strncmp(datemute, datenow, 8);
+        cmpv = strncmp(datenow, datemute, 8);
 
         switch(cmpv) {
-                case -1:rv = EXIT_FAILURE; // muted - mute date greater than or equal to today
+                case -1:
+                        rv = EXIT_SUCCESS; // muted - mute date greater than today so do nothing
                 break;
                 case 0: 
-                case 1: rv = EXIT_SUCCESS; // not muted - mute date less than today
+                case 1:         // not muted - mute date less than or equal to today
+                        rv = buildandruncmd(argc, argv);
                 break;
         }
-
-        // printf("Result is %d\n", cmpv);
 
         return(rv);
 }

@@ -11,43 +11,48 @@ run until I'm back.
 
 ## Mechanism
 
-The main idea is to take advantage of lazy evaluation in the shell. Thus we can
-have one command line that looks like this:
-```
-% mute || command
-```
-This expression evaluates to the first result `OR` the second one. If the first
-is true, the shell doesn't bother to run the second command, because the result
-of the whole command line must be `true`. If the first command evaluates to
-`false`, then the shell runs the second command, and the result is the result of
-that command. This is the lazy evaluation.
+~~The main idea is to take advantage of lazy evaluation in the shell. Thus we
+can have one command line that looks like this:~~
 
-This works for `AND` as well - so you can use the command to run things *only*
-during the muted date by using the `AND` operator instead:
-```
-% mute && command
-```
-This will run the command only when mute returns `true`, again because of lazy
-evaluation. This means we don't need an 'inverse' option.
+~~This expression evaluates to the first result `OR` the second one. If the
+first is true, the shell doesn't bother to run the second command, because the
+result of the whole command line must be `true`. If the first command evaluates
+to `false`, then the shell runs the second command, and the result is the result
+of that command. This is the lazy evaluation.~~
+
+However, that didn't work in `crontab`. I don't know why, it just wouldn't work.
+So I'm looking at another approach, which I hope might actually work this time.
+This approach is to have `mute` work rather like `time` - that is, you specify
+per Usage below, and the command either runs or it doesn't, based on what the
+mute status is. This means that the command to change the date is different -
+see also Usage below.
 
 ## Time
 
 The idea is that the mute command will check a date value in a file, and if that
-date value is >= today, then it will return `true` (non-zero). This will have
-the effect of making the lazy evaluation ignore the second command. Otherwise,
-it returns `false`, so that the shell will run the second command.
+date value is >= today, then it will ~~return `true` (non-zero)~~ ignore the
+rest of it's command line, and return `EXIT_SUCCESS`. Alternatively, if the mute
+date has passed, then it will execute the rest of the command line, and return
+the return value of that command line.
 
 ## Usage
 
 ```
 % mute
 ```
-Returns either true or false.
+Displays current mute date and exits.
 
 ```
-% mute YYYYMMDD
+% mute cmd
 ```
-Sets the 'mute-until' date.
+
+If the current system date is before the mute date (found in YYYYMMDD format in ~/.muterc)
+then it will ignore the command line and return 
+
+```
+% mute -s YYYYMMDD
+```
+Sets the 'mute-until' date. This is currently on backlog.
 
 ## TODO
 Oh, *lots* of stuff.
@@ -57,10 +62,6 @@ apart, so you could have different mute schedules for different apps.
 
 Ideally there should be an 'until further notice' option - but you can fake this
 by setting the date to be `99990101` or similar.
-
-You should be able to *dry-run* it, so it tells you what the current status is.
-You should be able to ask what the mute date is (or if multiple ones, all of
-them).
 
 The command should expose full management functionality, so you can add, remove,
 update mute dates for different IDs as you please.
