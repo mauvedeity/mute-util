@@ -142,10 +142,10 @@ int buildandruncmd(int argc, char *argv[])
         return(rv);
 }
 
-/* main */
-int main(int argc, char *argv[])
+/* standard processing - do we mute or not? */
+int process(int p_argc, char *p_argv[])
 {
-        char datenow[20], datemute[20], homedir[512];
+	char datenow[20], datemute[20];
         int rv = 0, cmpv = 0;
 
         getdatenow(datenow, sizeof(datenow));
@@ -161,9 +161,56 @@ int main(int argc, char *argv[])
                 break;
                 case 0: 
                 case 1:         // not muted - mute date less than or equal to today
-                        rv = buildandruncmd(argc, argv);
+                        rv = buildandruncmd(p_argc, p_argv);
                 break;
-        }
+	}
+	return(rv);
+}
 
-        return(rv);
+/* helptext */
+int helptext(void)
+{
+	char datenow[20], datemute[20], paramfile[512];
+	int rv, cmpv;
+
+        getdatenow(datenow, sizeof(datenow));
+        printf("Date now: ]%s[\n", datenow);
+
+
+	rv = getparameterfilename(paramfile, ".muterc");
+
+	printf("Using paramter file: %s\n", paramfile);
+
+        getmutedatefromfile(datemute, sizeof(datemute));
+        printf("Mute Date: ]%s[\n", datemute);
+        cmpv = strncmp(datenow, datemute, 8);
+
+        switch(cmpv) {
+                case -1:
+                        printf("Actions currently muted\n");
+                break;
+                case 0: 
+                case 1: 
+                        printf("Actions currently active\n");
+                break;
+	}
+	
+	return(EXIT_SUCCESS);
+}
+
+/* main */
+int main(int argc, char *argv[])
+{
+	/* so, what is argc? */
+	int rv;
+	
+	printf("argc: %d\n", argc);
+
+	if(argc == 1) {
+		rv = helptext();
+	} else {
+		rv = process(argc, argv);
+	}
+
+	return(rv);
 }
