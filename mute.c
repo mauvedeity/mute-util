@@ -89,7 +89,8 @@ int getmutedatefromfile(char *destbuf, size_t destbfsz)
 {
   FILE *fmutefile;
   char *fline = NULL;
-  const char *mfile = ".muterc", actualfname[512];
+  const char *mfile = ".muterc";
+  char actualfname[512];
   size_t linelen = 0;
   int rv = EXIT_FAILURE;
 

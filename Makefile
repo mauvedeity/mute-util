@@ -6,3 +6,4 @@ mute.o: mute.c
 
 clean:
 	rm -f mute.o mute
+
