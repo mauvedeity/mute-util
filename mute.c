@@ -93,6 +93,13 @@ int getmutedatefromfile(char *destbuf, size_t destbfsz)
   char actualfname[512];
   size_t linelen = 0;
   int rv = EXIT_FAILURE;
+  size_t copysize = 0;
+
+  if(destbfsz > 8) {
+    copysize = 8;
+  } else {
+    copysize = destbfsz;
+  }
 
   if(getparameterfilename(NULL, mfile) > 512) {
     fprintf(stderr, "Parameter file size is likely insane!");
@@ -112,7 +119,7 @@ int getmutedatefromfile(char *destbuf, size_t destbfsz)
     }
     linelen = getline(&fline, &linelen, fmutefile);
     fclose(fmutefile);
-    strncpy(destbuf, fline, destbfsz);
+    strncpy(destbuf, fline, copysize);
     if(fline) {
       free(fline);
     }
@@ -176,15 +183,14 @@ int helptext(void)
   char datenow[20], datemute[20], paramfile[512];
   int rv, cmpv;
 
-  getdatenow(datenow, sizeof(datenow));
-  printf("Date now: ]%s[\n", datenow);
-
   rv = getparameterfilename(paramfile, ".muterc");
+  printf("Using parameter file: %s\n", paramfile);
 
-  printf("Using paramter file: %s\n", paramfile);
+  getdatenow(datenow, sizeof(datenow));
+  printf("Date now:  %s\n", datenow);
 
   getmutedatefromfile(datemute, sizeof(datemute));
-  printf("Mute Date: ]%s[\n", datemute);
+  printf("Mute Date: %s\n", datemute);
   cmpv = strncmp(datenow, datemute, 8);
 
   switch(cmpv) {
