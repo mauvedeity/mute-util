@@ -19,6 +19,8 @@
 /* defines */
 /* this seems to be about right on OS X, Pi reckons bigger */
 #define MAX_CMD_SIZE 262144
+#define USAGE (0)
+#define ARMED (1)
 
 /* helper functions */
 int getdatenow(char *destbuf, size_t destbufsz)
@@ -177,34 +179,45 @@ int process(int p_argc, char *p_argv[])
   return(rv);
 }
 
-/* helptext */
-int helptext(void)
+/* notmuted */
+int notmuted(int p_status)
 {
   char datenow[20], datemute[20], paramfile[512];
   int rv, cmpv;
 
   rv = getparameterfilename(paramfile, ".muterc");
-  printf("Using parameter file: %s\n", paramfile);
+  if(p_status == USAGE)
+    printf("Using parameter file: %s\n", paramfile);
 
   getdatenow(datenow, sizeof(datenow));
-  printf("Date now:  %s\n", datenow);
+  if(p_status == USAGE)
+    printf("Date now:  %s\n", datenow);
 
-  getmutedatefromfile(datemute, sizeof(datemute));
-  printf("Mute Date: %s\n", datemute);
+  getmutedatefromfile(datemute, 8);
+  if(p_status == USAGE)
+    printf("Mute Date: %s\n", datemute);
+  
   cmpv = strncmp(datenow, datemute, 8);
 
-  switch(cmpv) {
-    case -1:
-      printf("Actions currently muted\n");
-      break;
-    case 0: 
-    case 1: 
+  return(cmpv >= 0);
+}
+
+/* helptext */
+int helptext(void)
+{
+  int rv;
+
+  rv = notmuted(USAGE);
+  if(rv)
       printf("Actions currently active\n");
-      break;
-  }
+  else
+      printf("Actions currently muted\n");
+
+  printf("%d\n", rv);
   
   return(EXIT_SUCCESS);
 }
+
 
 /* main */
 int main(int argc, char *argv[])
