@@ -39,12 +39,18 @@ of that command line.
 
 ## Usage
 
-``` % mute ``` Displays current mute date and exits.
+``` % mute ``` Displays current mute date and whether actions are 
+currently muted or not.
 
 ``` % mute cmd ```
 
 If the current system date is before the mute date (found in YYYYMMDD
 format in ~/.muterc) then it will ignore the command line and return
+`EXIT_SUCCESS`.
+
+If the current system date is the mute date or after, then it will execute
+the command line and then return. The return value will be the return value
+of the command that it was asked to execute.
 
 ``` % mute -s YYYYMMDD ``` Sets the 'mute-until' date. This is currently
 on backlog.
