@@ -21,6 +21,8 @@
 #define MAX_CMD_SIZE 262144
 #define USAGE (0)
 #define ARMED (1)
+/* YYYYMMDD plus null terminator = 9 */
+#define COPYSIZE (size_t)(9)
 
 /* helper functions */
 int getdatenow(char *destbuf, size_t destbufsz)
@@ -97,14 +99,14 @@ int getmutedatefromfile(char *destbuf, size_t destbfsz)
   int rv = EXIT_FAILURE;
   size_t copysize = 0;
 
-  if(destbfsz > 8) {
-    copysize = 8;
-  } else {
-    copysize = destbfsz;
+  if(destbfsz < COPYSIZE) {
+    fprintf(stderr, "Copy buffer size too small: %zu specified, %zu needed\n", 
+            destbfsz, COPYSIZE);
+    exit(EXIT_FAILURE);
   }
 
   if(getparameterfilename(NULL, mfile) > 512) {
-    fprintf(stderr, "Parameter file size is likely insane!");
+    fprintf(stderr, "Parameter file size is likely insane!\n");
     exit(EXIT_FAILURE);
   }
 
@@ -121,7 +123,8 @@ int getmutedatefromfile(char *destbuf, size_t destbfsz)
     }
     linelen = getline(&fline, &linelen, fmutefile);
     fclose(fmutefile);
-    strncpy(destbuf, fline, copysize);
+    strncpy(destbuf, fline, COPYSIZE);
+    destbuf[COPYSIZE-1] = '\0'; /* strncpy does not promise to null-terminate */
     if(fline) {
       free(fline);
     }
@@ -193,9 +196,9 @@ int notmuted(int p_status)
   if(p_status == USAGE)
     printf("Date now:  %s\n", datenow);
 
-  getmutedatefromfile(datemute, 8);
+  getmutedatefromfile(datemute, sizeof(datemute));
   if(p_status == USAGE)
-    printf("Mute Date: %s\n", datemute);
+    printf("Mute Date: ]%s[\n", datemute);
   
   cmpv = strncmp(datenow, datemute, 8);
 
