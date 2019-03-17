@@ -157,31 +157,6 @@ int buildandruncmd(int argc, char *argv[])
   return(rv);
 }
 
-/* standard processing - do we mute or not? */
-int process(int p_argc, char *p_argv[])
-{
-  char datenow[20], datemute[20];
-  int rv = 0, cmpv = 0;
-
-  getdatenow(datenow, sizeof(datenow));
-  // printf("Date now: ]%s[\n", datenow);
-  getmutedatefromfile(datemute, sizeof(datemute));
-  // printf("Mute Date: ]%s[\n", datemute);
-
-  cmpv = strncmp(datenow, datemute, 8);
-
-  switch(cmpv) {
-    case -1:
-      rv = EXIT_SUCCESS; // muted - mute date greater than today so do nothing
-      break;
-    case 0: 
-    case 1:         // not muted - mute date less than or equal to today
-      rv = buildandruncmd(p_argc, p_argv);
-      break;
-  }
-  return(rv);
-}
-
 /* notmuted */
 int notmuted(int p_status)
 {
@@ -198,11 +173,25 @@ int notmuted(int p_status)
 
   getmutedatefromfile(datemute, sizeof(datemute));
   if(p_status == USAGE)
-    printf("Mute Date: ]%s[\n", datemute);
+    printf("Mute Date: %s\n", datemute);
   
   cmpv = strncmp(datenow, datemute, 8);
 
   return(cmpv >= 0);
+}
+
+/* standard processing - do we mute or not? */
+int process(int p_argc, char *p_argv[])
+{
+  int rv = 0, cmpv = -1;
+  
+  cmpv = notmuted(ARMED);
+  if(cmpv)
+    rv = buildandruncmd(p_argc, p_argv);
+  else  
+    rv = EXIT_SUCCESS; // muted - mute date greater than today so do nothing
+
+  return(rv);
 }
 
 /* helptext */
@@ -216,11 +205,10 @@ int helptext(void)
   else
       printf("Actions currently muted\n");
 
-  printf("%d\n", rv);
+  // printf("%d\n", rv);
   
   return(EXIT_SUCCESS);
 }
-
 
 /* main */
 int main(int argc, char *argv[])
