@@ -35,8 +35,8 @@ the command line and then return. The return value will be the return value
 of the command that it was asked to execute.
 
 ``` % mute -s YYYYMMDD ``` Sets the 'mute-until' date. This is being tracked as
-(Issue 3)[https://github.com/mauvedeity/mute-util/issues/3] and
-(Issue 12)[https://github.com/mauvedeity/mute-util/issues/12].
+[Issue 3](https://github.com/mauvedeity/mute-util/issues/3) and
+[Issue 12](https://github.com/mauvedeity/mute-util/issues/12).
 
 ## TODO
 
