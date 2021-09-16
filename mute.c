@@ -163,6 +163,11 @@ int notmuted(int p_status)
   int rv, cmpv;
 
   rv = getparameterfilename(paramfile, ".muterc");
+  if(EXIT_FAILURE == rv) {
+    fprintf(stderr, "Couldn't get parameter file name");
+    exit(EXIT_FAILURE);
+  }
+
   if(p_status == USAGE)
     printf("Using parameter file: %s\n", paramfile);
 
