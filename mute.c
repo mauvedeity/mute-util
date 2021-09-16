@@ -97,7 +97,6 @@ int getmutedatefromfile(char *destbuf, size_t destbfsz)
   char actualfname[512];
   size_t linelen = 0;
   int rv = EXIT_FAILURE;
-  size_t copysize = 0;
 
   if(destbfsz < COPYSIZE) {
     fprintf(stderr, "Copy buffer size too small: %zu specified, %zu needed\n", 
