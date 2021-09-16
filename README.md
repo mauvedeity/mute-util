@@ -26,7 +26,7 @@ return value of that command line.
 ## Usage
 
 ``` % mute ``` Displays current mute date and whether actions are currently
-muted or not.
+muted or not. This will change - when I implement [Issue 20](https://github.com/mauvedeity/mute-util/issues/20) then `mute` with no parameters will show only whether actions are currently muted or not, and `mute -v` will show whether actions are muted or not, what the mute date is if in the future, and compile flag status.
 
 ``` % mute cmd ```
 
