@@ -23,6 +23,9 @@
 #define ARMED (1)
 /* YYYYMMDD plus null terminator = 9 */
 #define COPYSIZE (size_t)(9)
+/* Let's get boolean */
+#define TRUE (0 == 0)
+#define FALSE (!(TRUE))
 
 /* helper functions */
 int getdatenow(char *destbuf, size_t destbufsz)
@@ -87,10 +90,41 @@ int getparameterfilename(char *p_buf, const char *fname)
   return(rv);
 }
 
-/* read out of file system file */
-/* beware rather non-portable specification of file name */
+int validate_date(char *pdate)
+{
+  int rv = FALSE;
+  int dd, mm, yy;
+  int slen = 0;
+
+  slen = strlen(pdate);
+  if(9 != slen) {
+    return(FALSE);
+  }
+
+  // now we know we have 8 characters plus '\n', so sscanf should be safe
+  sscanf(pdate, "%4d%2d%2d", &yy, &mm, &dd); //gak
+
+  struct tm input = {
+    .tm_mday = dd,
+    .tm_mon = mm - 1,
+    .tm_year = yy - 1900,
+  };
+
+  time_t t = mktime (&input);
+  struct tm *output = localtime(&t);
+
+  rv = TRUE;
+  rv = rv && (yy == (output->tm_year + 1900));
+  rv = rv && (mm == (output->tm_mon + 1));
+  rv = rv && (dd == (output->tm_mday));
+
+  return(rv);
+}
+
 int getmutedatefromfile(char *destbuf, size_t destbfsz)
 {
+  /* read out of file system file */
+  /* beware rather non-portable specification of file name */
   FILE *fmutefile;
   char *fline = NULL;
   const char *mfile = ".muterc";
@@ -99,8 +133,7 @@ int getmutedatefromfile(char *destbuf, size_t destbfsz)
   int rv = EXIT_FAILURE;
 
   if(destbfsz < COPYSIZE) {
-    fprintf(stderr, "Copy buffer size too small: %zu specified, %zu needed\n", 
-            destbfsz, COPYSIZE);
+    fprintf(stderr, "Copy buffer size too small: %zu specified, %zu needed\n", destbfsz, COPYSIZE);
     exit(EXIT_FAILURE);
   }
 
@@ -112,31 +145,36 @@ int getmutedatefromfile(char *destbuf, size_t destbfsz)
   rv = getparameterfilename((char *)actualfname, mfile);
   if(rv == EXIT_FAILURE) {
     fprintf(stderr, "Failed getting param file name for %s\n", mfile);
-      exit(EXIT_FAILURE);
-    }
+    exit(EXIT_FAILURE);
+  }
 
-    fmutefile = fopen(actualfname, "r");
-    if (NULL == fmutefile) {
-      fprintf(stderr, "Couldn't open %s for reading\n", actualfname);
-      exit(EXIT_FAILURE);
-    }
-    linelen = getline(&fline, &linelen, fmutefile);
-    fclose(fmutefile);
+  fmutefile = fopen(actualfname, "r");
+  if (NULL == fmutefile) {
+    fprintf(stderr, "Couldn't open %s for reading\n", actualfname);
+    exit(EXIT_FAILURE);
+  }
+  linelen = getline(&fline, &linelen, fmutefile);
+  fclose(fmutefile);
+
+  if(TRUE == validate_date(fline)) {
     strncpy(destbuf, fline, COPYSIZE);
     destbuf[COPYSIZE-1] = '\0'; /* strncpy does not promise to null-terminate */
-    if(fline) {
-      free(fline);
-    }
-    return(0);
+    rv = EXIT_SUCCESS;
+  } else {
+    fprintf(stderr, "%s contains invalid date specification ]%s[\n", mfile, fline);
+    rv = EXIT_FAILURE;
+  }
+
+  if(fline) {
+    free(fline);
+  }
+  return(rv);
 }
 
 int buildandruncmd(int argc, char *argv[])
 {
   int argptr = 0, curcmdlen = 0, slen = 0, rv = 0;
   char newclistring[MAX_CMD_SIZE];
-
-  // build command line - need some way to make the length not
-  // overflow and cause me a core dump.
 
   newclistring[0] = '\0';
 
@@ -145,7 +183,7 @@ int buildandruncmd(int argc, char *argv[])
 
     if((curcmdlen + slen) > MAX_CMD_SIZE) {
       fprintf(stderr, "Command line too long!\n");
-      exit(1);
+      exit(EXIT_FAILURE);
     }
     strcat(newclistring, argv[argptr]);
     strncat(newclistring, " ", 1);
@@ -156,7 +194,6 @@ int buildandruncmd(int argc, char *argv[])
   return(rv);
 }
 
-/* notmuted */
 int notmuted(int p_status)
 {
   char datenow[20], datemute[20], paramfile[512];
@@ -175,9 +212,11 @@ int notmuted(int p_status)
   if(p_status == USAGE)
     printf("Date now:  %s\n", datenow);
 
-  getmutedatefromfile(datemute, sizeof(datemute));
-  if(p_status == USAGE)
+  rv = getmutedatefromfile(datemute, sizeof(datemute));
+  if((p_status == USAGE) && (EXIT_SUCCESS == rv))
     printf("Mute Date: %s\n", datemute);
+  else
+    exit(EXIT_FAILURE);
   
   cmpv = strncmp(datenow, datemute, 8);
 
