@@ -7,4 +7,5 @@ mute.o: mute.c
 clean:
 	rm -f mute.o mute
 
-CFLAGS="-Wall"
+CFLAGS="-Wall" "-g"
+
