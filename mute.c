@@ -186,7 +186,7 @@ int buildandruncmd(int argc, char *argv[])
       exit(EXIT_FAILURE);
     }
     strcat(newclistring, argv[argptr]);
-    strncat(newclistring, " ", 1);
+    strncat(newclistring, " ", 2); /* avoids issue with bound 1 */
     curcmdlen += slen;
   }
   printf("About to exec ]%s[\n", newclistring);
