@@ -21,6 +21,7 @@
 #define MAX_CMD_SIZE 262144
 #define USAGE (0)
 #define ARMED (1)
+#define PARAMFILE (512)
 /* YYYYMMDD plus null terminator = 9 */
 #define COPYSIZE (size_t)(9)
 /* Let's get boolean */
@@ -196,8 +197,12 @@ int buildandruncmd(int argc, char *argv[])
 
 int notmuted(int p_status)
 {
-  char datenow[20], datemute[20], paramfile[512];
-  int rv, cmpv;
+  char datenow[20], datemute[20], paramfile[PARAMFILE];
+  int rv, cmpv, i;
+
+  /* zero paramfile out */
+  for(i = 0; i < PARAMFILE; i++)
+    paramfile[i] = '\0';
 
   rv = getparameterfilename(paramfile, ".muterc");
   if(EXIT_FAILURE == rv) {
