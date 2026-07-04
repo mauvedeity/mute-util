@@ -202,7 +202,7 @@ int notmuted(int p_status)
 
   /* zero paramfile out */
   for(i = 0; i < PARAMFILE; i++)
-    paramfile[i] = '\0';
+    paramfile[i] = 0;
 
   rv = getparameterfilename(paramfile, ".muterc");
   if(EXIT_FAILURE == rv) {
@@ -221,7 +221,7 @@ int notmuted(int p_status)
   if((p_status == USAGE) && (EXIT_SUCCESS == rv))
     printf("Mute Date: %s\n", datemute);
   else
-    exit(EXIT_FAILURE);
+    exit(EXIT_FAILURE); /* why is this an error condition? */
   
   cmpv = strncmp(datenow, datemute, 8);
 
