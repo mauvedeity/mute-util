@@ -220,9 +220,7 @@ int notmuted(int p_status)
   rv = getmutedatefromfile(datemute, sizeof(datemute));
   if((p_status == USAGE) && (EXIT_SUCCESS == rv))
     printf("Mute Date: %s\n", datemute);
-  else
-    exit(EXIT_FAILURE); /* why is this an error condition? */
-  
+
   cmpv = strncmp(datenow, datemute, 8);
 
   return(cmpv >= 0);
